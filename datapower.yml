@@ -1,0 +1,55 @@
+---
+- hosts: ansible
+  gather_facts: yes
+  vars:
+    vagrant_ansible_version:  stable-2.11
+    datapower_version: 10.0.1.4
+
+  roles:
+    - geerlingguy.docker
+
+  tasks:
+    - name: Install prerequisites
+      apt:
+        update_cache: true
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+          - python3-venv
+          - python3-pip
+
+    - name: Create ansible directory structure
+      file:
+        state: directory
+        path: /root/ansible_collections/br35ba56/datapower
+        owner: vagrant
+        group: vagrant
+        mode : '0755'
+      become: yes
+      become_user: root
+
+    - name: Clone DataPower Collection
+      ansible.builtin.git:
+        repo: https://github.com/tony-schndr/ansible-datapower.git
+        dest: /root/ansible_collections/br35ba56/datapower
+        force: yes
+      become: yes
+      become_user: root
+
+    - name: Clone Netcommon
+      ansible.builtin.git:
+        repo: https://github.com/ansible-collections/ansible.netcommon.git
+        dest: /root/ansible_collections/ansible/netcommon
+      become: yes
+      become_user: root
+
+    - name: Install ansible {{ vagrant_ansible_version }}
+      ansible.builtin.pip:
+        name: https://github.com/ansible/ansible/archive/{{ vagrant_ansible_version }}.tar.gz
+        extra_args: --disable-pip-version-check
+      become: yes
+      become_user: root
+
